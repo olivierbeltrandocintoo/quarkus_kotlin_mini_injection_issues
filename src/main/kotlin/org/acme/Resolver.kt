@@ -1,5 +1,6 @@
 package org.acme
 
+import io.quarkus.arc.Arc
 import io.quarkus.arc.Priority
 import javax.enterprise.context.ApplicationScoped
 import javax.enterprise.context.RequestScoped
@@ -31,10 +32,28 @@ class ResolverWithRequest(val uriInfo: UriInfo) : Resolver {
 }
 
 @ApplicationScoped
-class Consumer(val resolver: Resolver) {
+class Consumer(val resolver: DispatchingResolver) {
 
     fun process(): String {
         return resolver.getInfo()
     }
 }
 
+fun isRequestActive() = Arc.container().getActiveContext(RequestScoped::class.java) != null
+
+
+@ApplicationScoped
+@Alternative
+@Priority(10)
+class DispatchingResolver(
+    val global: ResolverNoRequest,
+    val perRequest: ResolverWithRequest
+) : Resolver {
+    override fun getInfo(): String {
+        if (isRequestActive()) {
+            return perRequest.getInfo()
+        } else {
+            return global.getInfo()
+        }
+    }
+}
