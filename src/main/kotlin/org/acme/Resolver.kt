@@ -2,6 +2,7 @@ package org.acme
 
 import io.quarkus.arc.Arc
 import io.quarkus.arc.Priority
+import org.jboss.resteasy.reactive.server.core.CurrentRequestManager
 import javax.enterprise.context.ApplicationScoped
 import javax.enterprise.context.RequestScoped
 import javax.enterprise.inject.Alternative
@@ -39,21 +40,21 @@ class Consumer(val resolver: DispatchingResolver) {
     }
 }
 
-fun isRequestActive() = Arc.container().getActiveContext(RequestScoped::class.java) != null
+//fun isRequestActive() = Arc.container().getActiveContext(RequestScoped::class.java) != null
+fun isRequestActive() = CurrentRequestManager.get() != null
 
 
 @ApplicationScoped
 @Alternative
 @Priority(10)
 class DispatchingResolver(
-    val global: ResolverNoRequest,
-    val perRequest: ResolverWithRequest
+    val global: ResolverNoRequest, val perRequest: ResolverWithRequest
 ) : Resolver {
     override fun getInfo(): String {
-        if (isRequestActive()) {
-            return perRequest.getInfo()
+        return if (isRequestActive()) {
+            perRequest.getInfo()
         } else {
-            return global.getInfo()
+            global.getInfo()
         }
     }
 }

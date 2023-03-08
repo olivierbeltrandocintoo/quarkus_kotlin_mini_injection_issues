@@ -13,6 +13,6 @@ class ConsumerTest {
 
     @Test
     fun testConsumer() {
-        assertEquals("cool", consumer.resolver.getInfo())
+        assertEquals("offlineInformation", consumer.resolver.getInfo())
     }
 }
